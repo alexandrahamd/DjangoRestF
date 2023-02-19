@@ -1,3 +1,4 @@
+
 from django.db import models
 from django.conf import settings
 
@@ -51,5 +52,4 @@ class Payments(models.Model):
 
     def __str__(self):
         return f'{self.user_id}{self.curs_id}'
-
 

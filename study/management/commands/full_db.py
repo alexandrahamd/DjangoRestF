@@ -8,7 +8,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         curses = [
-            {'title': 'Математика', 'description': 'Учимся считать',},
+            {'title': 'Математика', 'description': 'Учимся считать', },
             {'title': 'Физика', 'description': 'Изучаем физические явления', },
             {'title': 'География', 'description': 'Изучаем страны', }
         ]
@@ -44,13 +44,13 @@ class Command(BaseCommand):
 
         User.objects.bulk_create(users_list)
 
-
-
         payments = [
-            {'user_id': User.objects.get(id=1), 'curs_id': Curs.objects.get(id=1), 'summa': 200, 'payment_method': "cash"},
-            {'user_id': User.objects.get(id=2), 'curs_id': Curs.objects.get(id=2), 'summa': 300, 'payment_method': "cash"},
-            {'user_id': User.objects.get(id=3), 'curs_id': Curs.objects.get(id=3), 'summa': 400, 'payment_method': "cash"},]
-
+            {'user_id': User.objects.get(id=1), 'curs_id': Curs.objects.get(id=1), 'summa': 200,
+             'payment_method': "cash"},
+            {'user_id': User.objects.get(id=2), 'curs_id': Curs.objects.get(id=2), 'summa': 300,
+             'payment_method': "cash"},
+            {'user_id': User.objects.get(id=3), 'curs_id': Curs.objects.get(id=3), 'summa': 400,
+             'payment_method': "cash"}, ]
 
         payments_list = []
         for item in payments:
