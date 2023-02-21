@@ -6,11 +6,12 @@ from users.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
-    pays = serializers.SerializerMethodField()
+    # pays = serializers.SerializerMethodField()
+    pays = PaymentsSerializer(source='payments_set', many=True)
 
     class Meta:
         model = User
         fields = ['email', 'phone', 'city', 'pays', ]
 
-    def get_pays(self, instanse):
-        return [f'{pay.data_of_payments}, {pay.curs_id}, {pay.summa}$' for pay in Payments.objects.filter(user_id=instanse)]
+    # def get_pays(self, instanse):
+    #     return [f'{pay.data_of_payments}, {pay.curs_id}, {pay.summa}$' for pay in Payments.objects.filter(user_id=instanse)]
