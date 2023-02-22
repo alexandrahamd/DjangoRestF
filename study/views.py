@@ -22,7 +22,7 @@ class CursViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
-        if request.user.has_perms('stydy.update_curs') or request.user == instance.user:
+        if request.user.has_perm('stydy.update_curs') or request.user == instance.user:
             partial = kwargs.pop('partial', False)
             serializer = self.get_serializer(instance, data=request.data, partial=partial)
             serializer.is_valid(raise_exception=True)
@@ -37,7 +37,7 @@ class CursViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if request.user.has_perms('stydy.delete_curs') or request.user == instance.user:
+        if request.user.has_perm('stydy.delete_curs') or request.user == instance.user:
             self.perform_destroy(instance)
             return Response(status=status.HTTP_204_NO_CONTENT)
 
