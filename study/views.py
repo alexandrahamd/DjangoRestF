@@ -22,22 +22,20 @@ class CursViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
-        if request.user.has_perm('stydy.update_curs') or request.user == instance.user:
+        if request.user.has_perm('stydy.update_curs') or request.user == self.request.user:
             partial = kwargs.pop('partial', False)
             serializer = self.get_serializer(instance, data=request.data, partial=partial)
             serializer.is_valid(raise_exception=True)
             self.perform_update(serializer)
 
             if getattr(instance, '_prefetched_objects_cache', None):
-                # If 'prefetch_related' has been applied to a queryset, we need to
-                # forcibly invalidate the prefetch cache on the instance.
                 instance._prefetched_objects_cache = {}
 
             return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if request.user.has_perm('stydy.delete_curs') or request.user == instance.user:
+        if request.user.has_perm('stydy.delete_curs') or request.user == self.request.user:
             self.perform_destroy(instance)
             return Response(status=status.HTTP_204_NO_CONTENT)
 
