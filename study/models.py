@@ -17,7 +17,7 @@ class Curs(models.Model):
 
 
 class Lesson(models.Model):
-    curs = models.ForeignKey(Curs, on_delete=models.CASCADE, verbose_name='курс')
+    curs = models.ForeignKey(Curs, on_delete=models.CASCADE, verbose_name='курс', blank=True, null=True)
     title = models.CharField(max_length=150, verbose_name='название')
     description = models.CharField(max_length=1000, blank=True, null=True, verbose_name='описание')
     preview = models.ImageField(upload_to='curces', blank=True, null=True, verbose_name='превью')
@@ -52,4 +52,16 @@ class Payments(models.Model):
 
     def __str__(self):
         return f'{self.user_id}{self.curs_id}'
+
+
+class Subscription(models.Model):
+    curs = models.ForeignKey(Curs, on_delete=models.CASCADE, verbose_name='курс')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='пользователь')
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+
+    def __str__(self):
+        return f'{self.curs} {self.user}'
 
