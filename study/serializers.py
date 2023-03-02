@@ -59,3 +59,10 @@ class CursSerializer(serializers.ModelSerializer):
         return 0
 
 
+class PaymentYouMoneySerializer(serializers.ModelSerializer):
+    lessons_count = serializers.SerializerMethodField()
+    receiver = serializers.IntegerField(default='123456789')
+    quickpay_form = serializers.CharField(default='button')
+    paymentType = serializers.CharField(default='AC')
+    sum = serializers.IntegerField(default='0')
+

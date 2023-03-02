@@ -1,10 +1,20 @@
+import hashlib
+from hashlib import sha256
+from http.client import responses
+import json
+import requests
+from django.conf import settings
+from django.shortcuts import render
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, generics, status
+from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
-from study.models import Curs, Lesson, Subscription
+from rest_framework.views import APIView
+from study.models import Curs, Lesson, Subscription, PaymentLog, Payments
 from study.permissions import IsOwner, IsModerator
-from study.serializers import CursSerializer, LessonSerializer, SubscriptionSerializer
+from study.serializers import CursSerializer, LessonSerializer, SubscriptionSerializer, PaymentYouMoneySerializer
 
 
 class CursViewSet(viewsets.ModelViewSet):
@@ -80,3 +90,86 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
     queryset = Subscription.objects.all()
     serializer_class = SubscriptionSerializer
     # permission_classes = [IsAuthenticated]
+
+
+class PaymentAPIView(APIView):
+
+    def get(self, *args, **kwargs):
+        curs_pk = self.kwargs.get('pk')
+        curs_item = get_object_or_404(Curs, pk=curs_pk)
+
+        user_item = self.request.user
+
+        # pay = Payments.objects.create(
+        #     curs_id=curs_item,
+        #     user_id=self.request.user,
+        #     summa=curs_item.prise
+        # )
+
+        data = {
+            "TerminalKey": settings.TERMINALKEY,
+            "Amount": curs_item.prise,
+            "OrderId": curs_item.pk,
+            "Description": "Оплата заказа",
+            "DATA": {
+                "Phone": user_item.phone,
+                "Email": user_item.email
+            },
+            "Receipt": {
+                "Email": 'email@ya.ru',
+                "Phone": 123456,
+                "EmailCompany": "b@test.ru",
+                "Taxation": "osn",
+                "Items": [
+                    {
+                        "Name": curs_item.title,
+                        "Price": curs_item.prise,
+                        "Quantity": 1.00,
+                        "Amount": curs_item.prise,
+                        "PaymentMethod": "full_prepayment",
+                        "PaymentObject": "commodity",
+                        "Tax": "vat10",
+                        "Ean13": "0123456789"
+                    }
+                ]
+            }
+        }
+
+        r = requests.post('https://securepay.tinkoff.ru/v2/Init', json=data)
+        PaymentLog.objects.create(**r.json())
+
+        return Response(
+            {
+                'url': r.json().get('PaymentURL'),
+            }
+        )
+
+
+class PaymentStatusAPIView(APIView):
+
+    def get(self, *args, **kwargs):
+        payment_id = self.kwargs.get('PaymentId')
+        payment_item = get_object_or_404(PaymentLog, PaymentId=payment_id)
+        amount = str(payment_item.Amount)
+        description = 'Оплата заказа'
+        orderId = str(payment_item.OrderId)
+        password = settings.PASSWORD
+        terminalKey = settings.TERMINALKEY
+
+        token = amount+description+orderId+password+terminalKey
+        hash = hashlib.sha256(token.encode('utf-8')).hexdigest()
+
+        data_status = {
+                "TerminalKey": settings.TERMINALKEY,
+                "PaymentId": payment_id,
+                "Token": hash
+        }
+
+        r = requests.post('https://securepay.tinkoff.ru/v2/GetState', json=data_status)
+
+        return Response(
+            {
+                'url': r.json()
+            }
+        )
+

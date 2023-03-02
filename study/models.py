@@ -1,4 +1,3 @@
-
 from django.db import models
 from django.conf import settings
 
@@ -7,6 +6,7 @@ class Curs(models.Model):
     title = models.CharField(max_length=150)
     description = models.CharField(max_length=1000, blank=True, null=True)
     preview = models.ImageField(upload_to='curces', blank=True, null=True)
+    prise = models.IntegerField(default=100)
 
     class Meta:
         verbose_name = 'Курс'
@@ -38,13 +38,13 @@ class Payments(models.Model):
     CHOICES = [
         (CASH, "cash"),
         (BANK, "bank account"),
-        ]
+    ]
 
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     data_of_payments = models.DateTimeField(auto_now_add=True, verbose_name='дата оплаты')
     curs_id = models.ForeignKey(Curs, on_delete=models.CASCADE, verbose_name='курс')
     summa = models.PositiveIntegerField(default=0, verbose_name='сумма оплаты')
-    payment_method = models.CharField(max_length=15, choices=CHOICES, verbose_name='способ оплаты')
+    payment_method = models.CharField(max_length=15, choices=CHOICES, verbose_name='способ оплаты', default=CASH)
 
     class Meta:
         verbose_name = 'Оплата'
@@ -65,3 +65,19 @@ class Subscription(models.Model):
     def __str__(self):
         return f'{self.curs} {self.user}'
 
+
+class PaymentLog(models.Model):
+    Success = models.CharField(max_length=250, null=True, blank=True)
+    ErrorCode = models.IntegerField(default=0, null=True, blank=True)
+    TerminalKey = models.CharField(max_length=250, null=True, blank=True)
+    Status = models.CharField(max_length=250, null=True, blank=True)
+    PaymentId = models.BigIntegerField(default=0, null=True, blank=True)
+    OrderId = models.IntegerField(default=0, null=True, blank=True)
+    Amount = models.IntegerField(default=0, null=True, blank=True)
+    PaymentURL = models.CharField(max_length=250, null=True, blank=True)
+    Message = models.CharField(max_length=250, null=True, blank=True)
+    Details = models.CharField(max_length=250, null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Лог Оплаты'
+        verbose_name_plural = 'Логи оплаты'
