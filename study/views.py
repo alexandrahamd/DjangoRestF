@@ -1,4 +1,5 @@
 import hashlib
+from study.tasks import send_email_curs
 from hashlib import sha256
 from http.client import responses
 import json
@@ -15,50 +16,54 @@ from rest_framework.views import APIView
 from study.models import Curs, Lesson, Subscription, PaymentLog, Payments
 from study.permissions import IsOwner, IsModerator
 from study.serializers import CursSerializer, LessonSerializer, SubscriptionSerializer, PaymentYouMoneySerializer
+from study.utils import check_status
 
 
 class CursViewSet(viewsets.ModelViewSet):
     queryset = Curs.objects.all()
     serializer_class = CursSerializer
     # permission_classes = [IsAuthenticated]
-    #
-    # def create(self, request, *args, **kwargs):
-    #     if request.user.has_perm('study.create_curs') or request.user.is_authenticated:
-    #         serializer = self.get_serializer(data=request.data)
-    #         serializer.is_valid(raise_exception=True)
-    #         self.perform_create(serializer)
-    #         headers = self.get_success_headers(serializer.data)
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-    #
-    # def update(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     if request.user.has_perm('stydy.update_curs') or request.user == self.request.user:
-    #         partial = kwargs.pop('partial', False)
-    #         serializer = self.get_serializer(instance, data=request.data, partial=partial)
-    #         serializer.is_valid(raise_exception=True)
-    #         self.perform_update(serializer)
-    #
-    #         if getattr(instance, '_prefetched_objects_cache', None):
-    #             instance._prefetched_objects_cache = {}
-    #
-    #         return Response(serializer.data)
-    #
-    # def destroy(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     if request.user.has_perm('stydy.delete_curs') or request.user == self.request.user:
-    #         self.perform_destroy(instance)
-    #         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+    def create(self, request, *args, **kwargs):
+        # if request.user.has_perm('study.create_curs') or request.user.is_authenticated:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # if request.user.has_perm('stydy.update_curs') or request.user == self.request.user:
+        partial = kwargs.pop('partial', False)
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
 
-        serializer = self.get_serializer(queryset, many=True)
+        if getattr(instance, '_prefetched_objects_cache', None):
+            instance._prefetched_objects_cache = {}
         return Response(serializer.data)
+
+    def perform_update(self, serializer):
+        serializer.save()
+        send_email_curs.delay(self.get_object().pk)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if request.user.has_perm('stydy.delete_curs') or request.user == self.request.user:
+            self.perform_destroy(instance)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+    # def list(self, request, *args, **kwargs):
+    #     queryset = self.filter_queryset(self.get_queryset())
+    #
+    #     page = self.paginate_queryset(queryset)
+    #     if page is not None:
+    #         serializer = self.get_serializer(page, many=True)
+    #         return self.get_paginated_response(serializer.data)
+    #
+    #     serializer = self.get_serializer(queryset, many=True)
+    #     return Response(serializer.data)
 
 
 
@@ -156,13 +161,15 @@ class PaymentStatusAPIView(APIView):
         password = settings.PASSWORD
         terminalKey = settings.TERMINALKEY
 
-        token = amount+description+orderId+password+terminalKey
+        token = amount + description + orderId + password + terminalKey
+        print(token)
         hash = hashlib.sha256(token.encode('utf-8')).hexdigest()
+        print(hash)
 
         data_status = {
-                "TerminalKey": settings.TERMINALKEY,
-                "PaymentId": payment_id,
-                "Token": hash
+            "TerminalKey": settings.TERMINALKEY,
+            "PaymentId": payment_id,
+            "Token": hash
         }
 
         r = requests.post('https://securepay.tinkoff.ru/v2/GetState', json=data_status)
@@ -172,4 +179,3 @@ class PaymentStatusAPIView(APIView):
                 'url': r.json()
             }
         )
-
