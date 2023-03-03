@@ -16,7 +16,6 @@ from rest_framework.views import APIView
 from study.models import Curs, Lesson, Subscription, PaymentLog, Payments
 from study.permissions import IsOwner, IsModerator
 from study.serializers import CursSerializer, LessonSerializer, SubscriptionSerializer, PaymentYouMoneySerializer
-from study.utils import check_status
 
 
 class CursViewSet(viewsets.ModelViewSet):
