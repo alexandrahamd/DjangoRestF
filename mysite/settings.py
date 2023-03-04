@@ -165,7 +165,7 @@ SIMPLE_JWT = {
 }
 
 CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
-CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
+# CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
 
 EMAIL_HOST = 'smtp.yandex.ru'
 EMAIL_PORT = 465
