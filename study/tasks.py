@@ -27,5 +27,6 @@ def send_email_curs(curs_pk):
         print('ошибка отправки сообщения')
 
 
+@shared_task
 def check_status_task():
     return requests.get(f'localhost:8000/study/payment_status/{2423967522}/')
